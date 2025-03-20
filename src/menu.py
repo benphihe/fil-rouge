@@ -11,34 +11,29 @@ class Button:
         self.text = text
         self.font_size = font_size
         self.font = pygame.font.Font(None, self.calculate_font_size(width, height, font_size))
-        self.color = (30, 30, 30)  # Gris foncé
-        self.hover_color = (45, 45, 45)  # Gris un peu plus clair
+        self.color = (30, 30, 30)
+        self.hover_color = (45, 45, 45)
         self.text_color = WHITE
         self.is_hovered = False
         self.image = None
         self.image_rect = None
         self.original_width = width
         self.original_height = height
-        self.hover_scale = 1.1  # Facteur d'agrandissement au survol
+        self.hover_scale = 1.1
         
-        # Charger l'image si un chemin est fourni
         if image_path:
             try:
                 original_image = pygame.image.load(image_path).convert_alpha()
-                # Calculer les dimensions pour préserver le ratio
                 img_width, img_height = original_image.get_size()
                 ratio = min(width / img_width, height / img_height)
                 new_width = int(img_width * ratio)
                 new_height = int(img_height * ratio)
                 
-                # Redimensionner l'image en préservant les proportions
                 self.image = pygame.transform.scale(original_image, (new_width, new_height))
                 self.original_image = self.image.copy()
                 
-                # Calculer la position pour centrer l'image dans le bouton
                 self.image_rect = self.image.get_rect(center=self.rect.center)
                 
-                # Préparer l'image agrandie pour le survol
                 hover_width = int(new_width * self.hover_scale)
                 hover_height = int(new_height * self.hover_scale)
                 self.hover_image = pygame.transform.scale(original_image, (hover_width, hover_height))
@@ -48,19 +43,16 @@ class Button:
                 self.image = None
 
     def calculate_font_size(self, width, height, base_font_size):
-        """Calcule une taille de police proportionnelle à la taille du bouton"""
         min_dimension = min(width, height)
         return int(min_dimension * 0.6) if self.text == "+" else int(min_dimension * 0.42)
 
     def draw(self, screen):
         if self.image:
-            # Si on a une image, on dessine uniquement l'image
             if self.is_hovered:
                 screen.blit(self.hover_image, self.hover_image_rect)
             else:
                 screen.blit(self.image, self.image_rect)
         else:
-            # Fallback au bouton classique si pas d'image
             color = self.hover_color if self.is_hovered else self.color
             pygame.draw.rect(screen, color, self.rect, border_radius=10)
             text_surface = self.font.render(self.text, True, self.text_color)
@@ -69,14 +61,12 @@ class Button:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
-            # Mise à jour de l'état de survol
             if self.image and self.image_rect:
                 self.is_hovered = self.image_rect.collidepoint(event.pos)
             else:
                 self.is_hovered = self.rect.collidepoint(event.pos)
             
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            # Vérification du clic
             if self.image and self.image_rect:
                 return self.image_rect.collidepoint(event.pos)
             else:
@@ -107,17 +97,14 @@ class TextInput:
         return False
         
     def draw(self, screen):
-        # Dessin du fond
         pygame.draw.rect(screen, WHITE, self.rect)
         
-        # Préparation du texte à afficher
         text_to_render = self.text if self.text else self.placeholder
         text_color = BLACK if self.text else (128, 128, 128)
         text_surface = self.font.render(text_to_render, True, text_color)
         text_rect = text_surface.get_rect(center=self.rect.center)
         screen.blit(text_surface, text_rect)
         
-        # Affichage du curseur clignotant
         if self.active:
             self.cursor_timer += 1
             if self.cursor_timer // 30 % 2 == 0:
@@ -140,15 +127,15 @@ class ScrollableList:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:  # Clic gauche
+            if event.button == 1:
                 if self.scrollbar_rect.collidepoint(event.pos):
                     self.dragging = True
                     return True
-            elif event.button == 4:  # Molette vers le haut
+            elif event.button == 4:
                 self.scroll_y = max(0, self.scroll_y - 30)
                 self.update_scrollbar()
                 return True
-            elif event.button == 5:  # Molette vers le bas
+            elif event.button == 5:
                 self.scroll_y = min(self.max_scroll, self.scroll_y + 30)
                 self.update_scrollbar()
                 return True
@@ -172,10 +159,8 @@ class ScrollableList:
             self.scrollbar_rect.y = self.scrollbar_pos
 
     def draw(self, screen):
-        # Fond de la barre de défilement
         pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(self.scrollbar_rect.x, self.visible_rect.y,
                                                          self.scrollbar_rect.width, self.visible_rect.height))
-        # Barre de défilement
         scrollbar_color = (150, 150, 150) if self.hover_scrollbar or self.dragging else (100, 100, 100)
         pygame.draw.rect(screen, scrollbar_color, 
                         pygame.Rect(self.scrollbar_rect.x, self.scrollbar_pos,
@@ -191,11 +176,9 @@ class Menu:
             'input_mode': 'ARCADE'
         }
         
-        # Navigation au clavier
         self.selected_button_index = 0
         self.keyboard_navigation = True
         
-        # Chargement de l'image de fond
         try:
             self.background = pygame.image.load("assets/background.png").convert()
             self.background = pygame.transform.scale(self.background, (WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -203,7 +186,6 @@ class Menu:
             self.background = None
             print("Image de fond non trouvée. Placez une image 'background.png' dans le dossier assets/")
         
-        # Initialisation des données de jeu
         self.selected_classes = {0: None, 1: None}
         self.current_player_selecting = 0
         self.player_data = [None, None]
@@ -213,12 +195,10 @@ class Menu:
         self.existing_players_buttons = []
         self.players_list = None
         
-        # Création du bouton retour global
         self.back_button = Button(WINDOW_WIDTH*0.05, WINDOW_HEIGHT*0.9, 
                                 BUTTON_WIDTH, BUTTON_HEIGHT, "RETOUR", FONT_SIZE_MEDIUM,
                                 image_path="assets/retour_button.png")
                                 
-        # Création des boutons du menu principal
         button_y = WINDOW_HEIGHT * 0.4
         button_spacing = WINDOW_HEIGHT * 0.12
         
@@ -237,7 +217,6 @@ class Menu:
                   image_path="assets/classement_button.png")
         ]
         
-        # Éléments des réglages
         start_y = WINDOW_HEIGHT * 0.35
         spacing = WINDOW_HEIGHT * 0.12
         
@@ -253,7 +232,6 @@ class Menu:
                                  start_y + spacing * 2, BUTTON_WIDTH, BUTTON_HEIGHT,
                                  "REINITIALISER SCORES", FONT_SIZE_MEDIUM)
         
-        # Boutons de sélection de classe
         self.class_buttons = []
         classes = CharacterClass.get_classes()
         x_start = WINDOW_WIDTH * 0.2
@@ -268,7 +246,6 @@ class Menu:
                 'preview_pos': (x_start + i * x_spacing, y_pos)
             })
             
-        # Boutons de sélection de map
         self.map_buttons = []
         x_start = WINDOW_WIDTH * 0.25
         x_spacing = WINDOW_WIDTH * 0.25
@@ -281,7 +258,6 @@ class Menu:
                 'preview_pos': (x_start + i * x_spacing, WINDOW_HEIGHT*0.4)
             })
             
-        # Interface de saisie du nom
         self.player_name_input = TextInput(
             WINDOW_WIDTH//2 - WINDOW_WIDTH*0.15, WINDOW_HEIGHT*0.4,
             WINDOW_WIDTH*0.3, BUTTON_HEIGHT, "Entrez votre nom"
@@ -292,7 +268,6 @@ class Menu:
             BUTTON_WIDTH, BUTTON_HEIGHT, "VALIDER", FONT_SIZE_MEDIUM
         )
 
-        # Bouton de création de personnage
         self.new_char_button = Button(
             WINDOW_WIDTH*0.25 - (BUTTON_WIDTH * 0.5)/2,
             WINDOW_HEIGHT*0.4,
@@ -301,16 +276,13 @@ class Menu:
         )
 
     def create_existing_players_buttons(self):
-        """Crée les boutons pour les personnages existants."""
         players = self.db.get_all_players()
         self.existing_players_buttons = []
         
         if players:
-            # Filtrer les joueurs pour exclure celui déjà sélectionné par le joueur 1
             if self.current_player_entering == 1 and self.player_data[0]:
                 players = [(pid, name) for pid, name in players if pid != self.player_data[0]['id']]
             
-            # Configuration de la liste défilante
             button_spacing = 20
             list_x = WINDOW_WIDTH * 0.7
             list_y = WINDOW_HEIGHT * 0.3
@@ -328,19 +300,16 @@ class Menu:
                 })
 
     def draw_main_menu(self, screen):
-        # Affichage du fond
         if self.background:
             screen.blit(self.background, (0, 0))
         else:
             screen.fill(BLACK)
         
-        # Titre simplifié
         title_font = pygame.font.Font(None, FONT_SIZE_LARGE)
-        title = title_font.render("SPACE DUEL", True, WHITE)  # Changé GOLD pour WHITE
+        title = title_font.render("SPACE DUEL", True, WHITE)
         title_rect = title.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT*0.2))
         screen.blit(title, title_rect)
         
-        # Dessin des boutons
         button_spacing = WINDOW_HEIGHT * 0.12
         for i, button in enumerate(self.main_buttons):
             button.rect.centerx = WINDOW_WIDTH//2
@@ -348,103 +317,82 @@ class Menu:
             button.draw(screen)
 
     def draw_settings(self, screen):
-        # Fond noir
         screen.fill(BLACK)
         
-        # Titre
         title_font = pygame.font.Font(None, FONT_SIZE_LARGE)
         title = title_font.render("PARAMETRES", True, WHITE)
         title_rect = title.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT*0.2))
         screen.blit(title, title_rect)
         
-        # Affichage des éléments de réglages
         start_y = WINDOW_HEIGHT * 0.35
         spacing = WINDOW_HEIGHT * 0.12
         
-        # Bouton pour changer de mode d'entrée
         self.input_button.rect.y = start_y
         self.input_button.rect.centerx = WINDOW_WIDTH//2
         self.input_button.draw(screen)
         
-        # Bouton custom class
         self.custom_class_button.rect.y = start_y + spacing
         self.custom_class_button.rect.centerx = WINDOW_WIDTH//2
         self.custom_class_button.draw(screen)
         
-        # Bouton pour réinitialiser les scores
         self.reset_button.rect.y = start_y + spacing * 2
         self.reset_button.rect.centerx = WINDOW_WIDTH//2
         self.reset_button.draw(screen)
         
-        # Bouton retour
         self.back_button.draw(screen)
 
     def draw_class_select(self, screen):
-        # Fond noir
         screen.fill(BLACK)
         
-        # Titre
         title = pygame.font.Font(None, FONT_SIZE_LARGE).render(
             f"JOUEUR {self.player_data[self.current_player_selecting]['name']} - CLASSE",
             True, GOLD)
         title_rect = title.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT*0.1))
         
-        # Effet de lueur pour le titre
         glow_surf = pygame.Surface((title.get_width() + 20, title.get_height() + 20), pygame.SRCALPHA)
         pygame.draw.rect(glow_surf, (*GOLD, 64), glow_surf.get_rect(), border_radius=10)
         screen.blit(glow_surf, glow_surf.get_rect(center=title_rect.center))
         screen.blit(title, title_rect)
         
-        # Configuration de la grille des classes - Centrage horizontal
-        grid_start_x = WINDOW_WIDTH * 0.1  # Réduit de 0.15 à 0.1 pour plus d'espace
-        grid_width = WINDOW_WIDTH * 0.8    # Augmenté de 0.7 à 0.8 pour utiliser plus de largeur
+        grid_start_x = WINDOW_WIDTH * 0.1
+        grid_width = WINDOW_WIDTH * 0.8
         spacing = grid_width / (len(self.class_buttons) - 1)
         
-        # Centrage vertical - Déplacé vers le centre de l'écran
-        base_y = WINDOW_HEIGHT * 0.45  # Augmenté de 0.35 à 0.45
+        base_y = WINDOW_HEIGHT * 0.45
         
-        # Affichage de chaque classe
         for i, class_button in enumerate(self.class_buttons):
             x = grid_start_x + i * spacing
             
-            # Zone de prévisualisation - Augmentée en largeur et hauteur
-            preview_size = 200  # Augmenté de 160 à 200 pour plus d'espace
+            preview_size = 200
             preview_rect = pygame.Rect(x - preview_size//2, base_y - preview_size//2, preview_size, preview_size)
             pygame.draw.rect(screen, (30, 30, 30), preview_rect, border_radius=10)
             pygame.draw.rect(screen, LIGHT_BLUE, preview_rect, width=1, border_radius=10)
             
-            # Prévisualisation de la classe
             char_class = CharacterClass(class_button['type'])
             char_class.draw_preview(screen, x, base_y)
             
-            # Bouton de sélection - Ajusté pour être plus proche des statistiques
             class_button['button'].rect.centerx = x
-            class_button['button'].rect.top = base_y + preview_size//2 + 20  # Ajusté en fonction de la nouvelle taille
+            class_button['button'].rect.top = base_y + preview_size//2 + 20
             class_button['button'].draw(screen)
         
-        # Bouton retour
         self.back_button.draw(screen)
 
     def draw_map_select(self, screen):
         screen.fill(BLACK)
         
-        # Titre avec effet de lueur
         title = pygame.font.Font(None, FONT_SIZE_LARGE).render("SELECTION DE LA MAP", True, GOLD)
         title_rect = title.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT*0.1))
         
-        # Effet de lueur pour le titre
         glow_surf = pygame.Surface((title.get_width() + 20, title.get_height() + 20), pygame.SRCALPHA)
         pygame.draw.rect(glow_surf, (*GOLD, 64), glow_surf.get_rect(), border_radius=10)
         screen.blit(glow_surf, glow_surf.get_rect(center=title_rect.center))
         screen.blit(title, title_rect)
         
-        # Affichage des maps en carrousel
         for i, map_button in enumerate(self.map_buttons):
             map_type = map_button['type']
             x = WINDOW_WIDTH * (0.25 + i * 0.25)
             y = WINDOW_HEIGHT * 0.4
             
-            # Cadre de prévisualisation avec effet de profondeur
             preview_width = WINDOW_WIDTH * 0.2
             preview_height = WINDOW_HEIGHT * 0.2
             preview_rect = pygame.Rect(
@@ -453,25 +401,20 @@ class Menu:
                 preview_width, preview_height
             )
             
-            # Fond du cadre
             pygame.draw.rect(screen, (30, 30, 30), preview_rect.inflate(20, 20), border_radius=10)
             pygame.draw.rect(screen, LIGHT_BLUE, preview_rect.inflate(20, 20), width=1, border_radius=10)
             
-            # Prévisualisation de la map
             self.maps[map_type].draw_preview(screen, preview_rect)
             
-            # Description avec fond semi-transparent
             desc_surface = pygame.Surface((preview_width, 30), pygame.SRCALPHA)
             desc_surface.fill((0, 0, 0, 180))
             screen.blit(desc_surface, (preview_rect.x, preview_rect.bottom + 10))
             
-            # Texte de description
             font = pygame.font.Font(None, FONT_SIZE_SMALL)
             desc = font.render(self.maps[map_type].description, True, WHITE)
             desc_rect = desc.get_rect(center=(x, preview_rect.bottom + 25))
             screen.blit(desc, desc_rect)
             
-            # Positionnement et dessin du bouton
             map_button['button'].rect.centerx = x
             map_button['button'].rect.top = preview_rect.bottom + 50
             map_button['button'].draw(screen)
@@ -479,23 +422,19 @@ class Menu:
         self.back_button.draw(screen)
 
     def draw_player_select(self, screen):
-        # Fond et titre
         screen.fill(BLACK)
         title = pygame.font.Font(None, FONT_SIZE_LARGE).render(
             "ENTREZ VOTRE NOM", True, WHITE)
         screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, WINDOW_HEIGHT*0.2))
         
-        # Champ de texte
         self.player_name_input.draw(screen)
         
-        # Boutons
         self.validate_button.draw(screen)
         self.back_button.draw(screen)
 
     def draw_leaderboard(self, screen):
         screen.fill(BLACK)
         
-        # Titre avec effet de lueur
         title = pygame.font.Font(None, FONT_SIZE_LARGE).render("CLASSEMENT", True, GOLD)
         title_rect = title.get_rect(center=(WINDOW_WIDTH//2, 50))
         
@@ -504,19 +443,16 @@ class Menu:
         screen.blit(glow_surf, glow_surf.get_rect(center=title_rect.center))
         screen.blit(title, title_rect)
         
-        # Tableau avec effet de profondeur
         table_rect = pygame.Rect(WINDOW_WIDTH*0.1, 120,
                                WINDOW_WIDTH*0.8, WINDOW_HEIGHT*0.7)
         pygame.draw.rect(screen, (30, 30, 30), table_rect, border_radius=10)
         pygame.draw.rect(screen, LIGHT_BLUE, table_rect, width=1, border_radius=10)
         
-        # En-têtes avec séparateurs
         headers = ["JOUEUR", "PARTIES", "VICTOIRES", "WIN RATE", "MEILLEUR SCORE"]
-        header_widths = [0.3, 0.15, 0.15, 0.15, 0.25]  # Proportions relatives
+        header_widths = [0.3, 0.15, 0.15, 0.15, 0.25]
         total_width = table_rect.width * 0.9
         x = table_rect.x + table_rect.width * 0.05
         
-        # Barre de séparation des en-têtes
         pygame.draw.line(screen, LIGHT_BLUE,
                         (table_rect.x, 160),
                         (table_rect.right, 160),
@@ -527,10 +463,8 @@ class Menu:
             screen.blit(text, (x, 130))
             x += total_width * width
         
-        # Données avec alternance de couleurs
         y = 180
         for rank, (name, games, wins, score, win_rate) in enumerate(self.db.get_leaderboard(), 1):
-            # Fond alterné pour une meilleure lisibilité
             if rank % 2 == 0:
                 row_rect = pygame.Rect(table_rect.x + 5, y - 5,
                                      table_rect.width - 10, 30)
@@ -553,7 +487,6 @@ class Menu:
         title = pygame.font.Font(None, FONT_SIZE_LARGE).render("REGLES DU JEU", True, WHITE)
         screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, WINDOW_HEIGHT*0.1))
 
-        # Texte des règles
         rules_text = [
             "Bienvenue dans Space Duel !",
             "",
@@ -576,7 +509,6 @@ class Menu:
             screen.blit(text, (WINDOW_WIDTH//2 - text.get_width()//2, y_pos))
             y_pos += FONT_SIZE_SMALL * 0.8
 
-        # Déplacer le bouton retour en bas au milieu
         self.back_button.rect.x = WINDOW_WIDTH//2 - BUTTON_WIDTH//2
         self.back_button.rect.y = WINDOW_HEIGHT * 0.85
         self.back_button.draw(screen)
@@ -588,13 +520,11 @@ class Menu:
             True, WHITE)
         screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, WINDOW_HEIGHT*0.1))
         
-        # Séparateur vertical
         pygame.draw.line(screen, WHITE, 
                         (WINDOW_WIDTH * 0.5, WINDOW_HEIGHT * 0.2),
                         (WINDOW_WIDTH * 0.5, WINDOW_HEIGHT * 0.8),
                         2)
         
-        # Titres des sections
         font = pygame.font.Font(None, FONT_SIZE_MEDIUM)
         
         new_text = font.render("NOUVEAU PERSONNAGE", True, WHITE)
@@ -603,46 +533,35 @@ class Menu:
         existing_text = font.render("PERSONNAGES EXISTANTS", True, WHITE)
         screen.blit(existing_text, (WINDOW_WIDTH * 0.75 - existing_text.get_width()/2, WINDOW_HEIGHT * 0.2))
         
-        # Bouton nouveau personnage (symbole +)
         self.new_char_button.draw(screen)
         
-        # Zone de défilement pour les personnages existants
         if self.players_list:
-            # Dessiner les boutons avec le décalage de défilement
             for player_button in self.existing_players_buttons:
                 button = player_button['button']
-                # Ajuster la position en fonction du défilement
                 original_y = button.rect.y
                 button.rect.y -= self.players_list.scroll_y
                 
-                # Ne dessiner que si le bouton est dans la zone visible
                 if (self.players_list.visible_rect.top <= button.rect.y <= self.players_list.visible_rect.bottom or
                     self.players_list.visible_rect.top <= button.rect.bottom <= self.players_list.visible_rect.bottom):
                     button.draw(screen)
                 
-                # Restaurer la position originale
                 button.rect.y = original_y
             
-            # Dessiner la barre de défilement
             self.players_list.draw(screen)
             
         self.back_button.draw(screen)
 
     def draw_custom_class(self, screen):
-        # Fond noir
         screen.fill(BLACK)
         
-        # Titre
         title_font = pygame.font.Font(None, FONT_SIZE_LARGE)
         title = title_font.render("CUSTOM CLASS", True, WHITE)
         title_rect = title.get_rect(center=(WINDOW_WIDTH//2, WINDOW_HEIGHT*0.2))
         screen.blit(title, title_rect)
         
-        # Bouton retour
         self.back_button.draw(screen)
 
     def draw(self, screen):
-        # Appel à la méthode de dessin correspondant à l'état actuel
         draw_methods = {
             "MAIN": self.draw_main_menu,
             "SETTINGS": self.draw_settings,
@@ -659,7 +578,6 @@ class Menu:
             draw_methods[self.state](screen)
 
     def reset_menu_state(self):
-        """Réinitialise l'état du menu pour une nouvelle partie."""
         self.state = "MAIN"
         self.selected_classes = {0: None, 1: None}
         self.current_player_selecting = 0
@@ -670,56 +588,44 @@ class Menu:
         self.players_list = None
 
     def set_state(self, new_state):
-        """Change l'état du menu et effectue les initialisations nécessaires."""
-        # Si on retourne au menu principal, on vide l'historique
         if new_state == "MAIN":
             self.reset_menu_state()
             self.state_history = ["MAIN"]
-            # Réinitialiser la sélection du bouton
             self.selected_button_index = 0
             if self.main_buttons:
                 self.main_buttons[0].is_hovered = True
             return None
         
-        # Initialisation spécifique pour chaque état
         if new_state == "CHAR_SELECT":
             self.current_player_entering = 0
             self.player_data = [None, None]
             self.create_existing_players_buttons()
-            # Réinitialiser la sélection du bouton
             self.selected_button_index = 0
         elif new_state == "PLAYER_SELECT":
             self.player_name_input.text = ""
             self.player_name_input.active = True
-            # Réinitialiser la sélection du bouton
             self.selected_button_index = 0
         elif new_state == "CLASS_SELECT":
             self.current_player_selecting = 0
-            # Réinitialiser la sélection du bouton
             self.selected_button_index = 0
             if self.class_buttons:
                 self.class_buttons[0]['button'].is_hovered = True
         elif new_state == "MAP_SELECT":
-            # Réinitialiser la sélection du bouton
             self.selected_button_index = 0
             if self.map_buttons:
                 self.map_buttons[0]['button'].is_hovered = True
         elif new_state == "SETTINGS":
-            # Réinitialiser la sélection du bouton
             self.selected_button_index = 0
             self.input_button.is_hovered = True
         elif new_state == "RULES" or new_state == "LEADERBOARD":
-            # Dans ces écrans, seul le bouton retour est disponible
             self.selected_button_index = 0
             self.back_button.is_hovered = True
         
-        # Ajouter le nouvel état à l'historique
         self.state_history.append(new_state)
         self.state = new_state
         return None
 
     def get_current_buttons(self):
-        """Retourne la liste des boutons disponibles dans l'état actuel."""
         buttons_by_state = {
             "MAIN": self.main_buttons,
             "SETTINGS": [self.input_button, self.custom_class_button, self.reset_button, self.back_button],
@@ -736,7 +642,6 @@ class Menu:
         return buttons_by_state.get(self.state, [])
 
     def get_button_positions(self):
-        """Retourne un dictionnaire avec les positions des boutons pour la navigation spatiale."""
         buttons = self.get_current_buttons()
         positions = {}
         
@@ -750,7 +655,6 @@ class Menu:
         return positions
 
     def find_closest_button(self, current_index, direction):
-        """Trouve le bouton le plus proche dans la direction spécifiée."""
         positions = self.get_button_positions()
         if not positions or current_index not in positions:
             return 0
@@ -763,7 +667,6 @@ class Menu:
             if index == current_index:
                 continue
                 
-            # Vérifier si le bouton est dans la direction souhaitée
             is_in_direction = False
             if direction == "UP" and pos['y'] < current_pos['y']:
                 is_in_direction = True
@@ -775,18 +678,14 @@ class Menu:
                 is_in_direction = True
                 
             if is_in_direction:
-                # Calculer la distance euclidienne
                 dx = pos['x'] - current_pos['x']
                 dy = pos['y'] - current_pos['y']
                 distance = (dx * dx + dy * dy) ** 0.5
                 
-                # Favoriser les boutons qui sont plus alignés avec la direction
                 alignment_factor = 1.0
                 if direction in ["UP", "DOWN"]:
-                    # Pénaliser les boutons qui sont trop décalés horizontalement
                     alignment_factor = 1.0 + (abs(dx) / (abs(dy) + 1)) * 0.5
-                else:  # LEFT, RIGHT
-                    # Pénaliser les boutons qui sont trop décalés verticalement
+                else:
                     alignment_factor = 1.0 + (abs(dy) / (abs(dx) + 1)) * 0.5
                 
                 adjusted_distance = distance * alignment_factor
@@ -795,18 +694,14 @@ class Menu:
                     min_distance = adjusted_distance
                     closest_index = index
         
-        # Si aucun bouton n'est trouvé dans la direction, garder le même
         return closest_index if min_distance < float('inf') else current_index
 
     def update_selected_button(self):
-        """Met à jour le bouton sélectionné en fonction de l'index actuel."""
         buttons = self.get_current_buttons()
         
-        # Réinitialiser tous les boutons
         for button in buttons:
             button.is_hovered = False
         
-        # Sélectionner le bouton actuel
         if buttons and 0 <= self.selected_button_index < len(buttons):
             buttons[self.selected_button_index].is_hovered = True
 
@@ -814,57 +709,44 @@ class Menu:
         if event.type == pygame.QUIT:
             return "QUIT"
 
-        # Gestion de la touche Échap pour revenir en arrière
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            # Si on est dans le champ de texte, on le désactive d'abord
             if self.state == "PLAYER_SELECT" and self.player_name_input.active:
                 self.player_name_input.active = False
             else:
-                # Sinon, on revient à l'état précédent
                 return self.go_back()
 
-        # Navigation au clavier
         if event.type == pygame.KEYDOWN:
             buttons = self.get_current_buttons()
             
-            # Navigation avec les flèches
             if event.key == pygame.K_UP:
                 if self.state == "PLAYER_SELECT" and self.player_name_input.active:
-                    # Si on est dans le champ de texte, on le désactive et on sélectionne un bouton
                     self.player_name_input.active = False
-                    self.selected_button_index = 0  # Sélectionner le bouton valider
+                    self.selected_button_index = 0
                 else:
-                    # Naviguer vers le bouton le plus proche vers le haut
                     self.selected_button_index = self.find_closest_button(self.selected_button_index, "UP")
                 self.update_selected_button()
                 return None
                 
             elif event.key == pygame.K_DOWN:
                 if self.state == "PLAYER_SELECT" and not self.player_name_input.active and self.selected_button_index == 0:
-                    # Si on est sur le bouton valider, on active le champ de texte
                     self.player_name_input.active = True
                 else:
-                    # Naviguer vers le bouton le plus proche vers le bas
                     self.selected_button_index = self.find_closest_button(self.selected_button_index, "DOWN")
                 self.update_selected_button()
                 return None
                 
             elif event.key == pygame.K_LEFT:
-                # Naviguer vers le bouton le plus proche vers la gauche
                 self.selected_button_index = self.find_closest_button(self.selected_button_index, "LEFT")
                 self.update_selected_button()
                 return None
                 
             elif event.key == pygame.K_RIGHT:
-                # Naviguer vers le bouton le plus proche vers la droite
                 self.selected_button_index = self.find_closest_button(self.selected_button_index, "RIGHT")
                 self.update_selected_button()
                 return None
                 
             elif event.key == pygame.K_RETURN:
-                # Activer le bouton sélectionné
                 if self.state == "PLAYER_SELECT" and self.player_name_input.active:
-                    # Si on est dans le champ de texte, valider la saisie
                     if self.player_name_input.text.strip():
                         player_name = self.player_name_input.text.strip()
                         player_id = self.db.add_player(player_name)
@@ -878,22 +760,19 @@ class Menu:
                             self.player_name_input.text = ""
                             return self.set_state("CHAR_SELECT")
                         else:
-                            # Les deux joueurs sont enregistrés
                             return self.set_state("CLASS_SELECT")
                 else:
-                    # Activer le bouton sélectionné
                     if buttons and 0 <= self.selected_button_index < len(buttons):
                         selected_button = buttons[self.selected_button_index]
                         
-                        # Traiter l'action en fonction de l'état et du bouton
                         if self.state == "MAIN":
-                            if self.selected_button_index == 0:  # JOUER
+                            if self.selected_button_index == 0:
                                 return self.set_state("CHAR_SELECT")
-                            elif self.selected_button_index == 1:  # REGLAGES
+                            elif self.selected_button_index == 1:
                                 return self.set_state("SETTINGS")
-                            elif self.selected_button_index == 2:  # REGLES
+                            elif self.selected_button_index == 2:
                                 return self.set_state("RULES")
-                            elif self.selected_button_index == 3:  # LEADERBOARD
+                            elif self.selected_button_index == 3:
                                 return self.set_state("LEADERBOARD")
                                 
                         elif self.state == "SETTINGS":
@@ -920,7 +799,6 @@ class Menu:
                                 else:
                                     return self.go_back()
                             else:
-                                # Trouver l'index du bouton de classe sélectionné
                                 for i, class_button in enumerate(self.class_buttons):
                                     if class_button['button'] == selected_button:
                                         self.selected_classes[self.current_player_selecting] = class_button['type']
@@ -928,7 +806,6 @@ class Menu:
                                         if self.current_player_selecting == 0:
                                             self.current_player_selecting = 1
                                         else:
-                                            # Les deux joueurs ont choisi leur classe
                                             return self.set_state("MAP_SELECT")
                                         break
                                         
@@ -937,7 +814,6 @@ class Menu:
                                 self.current_player_selecting = 1
                                 return self.go_back()
                             else:
-                                # Trouver l'index du bouton de map sélectionné
                                 for i, map_button in enumerate(self.map_buttons):
                                     if map_button['button'] == selected_button:
                                         self.selected_map = map_button['type']
@@ -945,7 +821,6 @@ class Menu:
                                         
                         elif self.state == "PLAYER_SELECT":
                             if selected_button == self.back_button:
-                                # Désactiver le champ de texte avant de revenir en arrière
                                 self.player_name_input.active = False
                                 self.player_name_input.text = ""
                                 
@@ -969,7 +844,6 @@ class Menu:
                                         self.player_name_input.text = ""
                                         return self.set_state("CHAR_SELECT")
                                     else:
-                                        # Les deux joueurs sont enregistrés
                                         return self.set_state("CLASS_SELECT")
                                         
                         elif self.state == "CHAR_SELECT":
@@ -983,7 +857,6 @@ class Menu:
                             elif selected_button == self.new_char_button:
                                 return self.set_state("PLAYER_SELECT")
                             else:
-                                # Vérifier si c'est un bouton de personnage existant
                                 for player_button in self.existing_players_buttons:
                                     if player_button['button'] == selected_button:
                                         self.player_data[self.current_player_entering] = {
@@ -999,25 +872,21 @@ class Menu:
                                         break
                 return None
 
-        # Si on utilise la navigation au clavier, on ignore les événements de la souris
         if self.keyboard_navigation:
-            # Gérer uniquement les événements du champ de texte en mode clavier
             if self.state == "PLAYER_SELECT" and self.player_name_input.active:
                 self.player_name_input.handle_event(event)
             return None
 
-        # Le code existant pour la gestion de la souris reste inchangé mais ne sera pas utilisé
-        # si keyboard_navigation est True
         if self.state == "MAIN":
             for i, button in enumerate(self.main_buttons):
                 if button.handle_event(event):
-                    if i == 0:  # JOUER
+                    if i == 0:
                         return self.set_state("CHAR_SELECT")
-                    elif i == 1:  # REGLAGES
+                    elif i == 1:
                         return self.set_state("SETTINGS")
-                    elif i == 2:  # REGLES
+                    elif i == 2:
                         return self.set_state("RULES")
-                    elif i == 3:  # LEADERBOARD
+                    elif i == 3:
                         return self.set_state("LEADERBOARD")
 
         elif self.state == "SETTINGS":
@@ -1060,7 +929,6 @@ class Menu:
                     if self.current_player_selecting == 0:
                         self.current_player_selecting = 1
                     else:
-                        # Les deux joueurs ont choisi leur classe
                         return self.set_state("MAP_SELECT")
                         
         elif self.state == "MAP_SELECT":
@@ -1075,7 +943,6 @@ class Menu:
                         
         elif self.state == "PLAYER_SELECT":
             if self.back_button.handle_event(event):
-                # Désactiver le champ de texte avant de revenir en arrière
                 self.player_name_input.active = False
                 self.player_name_input.text = ""
                 
@@ -1086,13 +953,11 @@ class Menu:
                 else:
                     return self.go_back()
                 
-            # Gérer les événements du champ de texte
             self.player_name_input.handle_event(event)
                 
             if self.validate_button.handle_event(event) or \
                (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and self.player_name_input.active):
                 if self.player_name_input.text.strip():
-                    # Enregistrement du joueur dans la base de données
                     player_name = self.player_name_input.text.strip()
                     player_id = self.db.add_player(player_name)
                     self.player_data[self.current_player_entering] = {
@@ -1105,7 +970,6 @@ class Menu:
                         self.player_name_input.text = ""
                         return self.set_state("CHAR_SELECT")
                     else:
-                        # Les deux joueurs sont enregistrés
                         return self.set_state("CLASS_SELECT")
                         
         elif self.state == "LEADERBOARD":
@@ -1124,15 +988,12 @@ class Menu:
             if self.new_char_button.handle_event(event):
                 return self.set_state("PLAYER_SELECT")
                 
-            # Gérer les événements de la liste défilante
             if self.players_list and self.players_list.handle_event(event):
                 return None
                 
-            # Gérer les clics sur les boutons de personnages
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_pos = pygame.mouse.get_pos()
                 if self.players_list and self.players_list.visible_rect.collidepoint(mouse_pos):
-                    # Ajuster la position de la souris pour le défilement
                     adjusted_y = mouse_pos[1] + self.players_list.scroll_y
                     adjusted_pos = (mouse_pos[0], adjusted_y)
                     
@@ -1177,35 +1038,25 @@ class Menu:
         }
 
     def go_back(self):
-        """Retourne à l'état précédent dans l'historique."""
         if len(self.state_history) <= 1:
             return self.set_state("MAIN")
             
-        # Sauvegarder l'état actuel avant de le modifier
         current_state = self.state
             
-        # Retirer l'état actuel
         self.state_history.pop()
-        # Récupérer l'état précédent
         previous_state = self.state_history[-1]
         
-        # Si on revient au menu principal
         if previous_state == "MAIN":
             return self.set_state("MAIN")
         
-        # Gestion spécifique pour certains états
         if current_state == "PLAYER_SELECT":
-            # Si on quitte l'écran de saisie du nom
             self.player_name_input.active = False
             self.player_name_input.text = ""
         
-        # Mettre à jour l'état actuel
         self.state = previous_state
         
-        # Réinitialiser la sélection du bouton
         self.selected_button_index = 0
         
-        # Mettre à jour l'état visuel des boutons selon l'état précédent
         button_highlight = {
             "MAIN": lambda: self.main_buttons[0].is_hovered if self.main_buttons else None,
             "SETTINGS": lambda: self.input_button.is_hovered,
@@ -1219,6 +1070,17 @@ class Menu:
         if previous_state in button_highlight:
             button_highlight[previous_state]()
         
-        # Mettre à jour l'état visuel de tous les boutons
         self.update_selected_button()
+        return None 
+
+    def navigate_up(self):
+        self.selected_button_index = (self.selected_button_index - 1) % len(self.get_current_buttons())
+
+    def navigate_down(self):
+        self.selected_button_index = (self.selected_button_index + 1) % len(self.get_current_buttons())
+
+    def select_option(self):
+        buttons = self.get_current_buttons()
+        if 0 <= self.selected_button_index < len(buttons):
+            return buttons[self.selected_button_index]
         return None 

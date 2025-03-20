@@ -12,7 +12,6 @@ class InputHandler:
     def __init__(self):
         self.input_mode = 'ARCADE'
         
-        # Initialisation des joysticks pour le mode ARCADE
         pygame.joystick.init()
         self.joysticks = []
         for i in range(pygame.joystick.get_count()):
@@ -20,15 +19,13 @@ class InputHandler:
             joystick.init()
             self.joysticks.append(joystick)
             
-        # Initialisation GPIO si disponible
         if RPI_AVAILABLE:
             GPIO.setmode(GPIO.BCM)
             for pin in GPIO_BUTTONS.values():
                 GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
                 
-        # Configuration des touches pour le mode PC
         self.keyboard_controls = {
-            0: {  # Joueur 1
+            0: {
                 'UP': pygame.K_w,
                 'DOWN': pygame.K_s,
                 'LEFT': pygame.K_a,
@@ -36,7 +33,7 @@ class InputHandler:
                 'FIRE': pygame.K_SPACE,
                 'SHIELD': pygame.K_LSHIFT
             },
-            1: {  # Joueur 2
+            1: {
                 'UP': pygame.K_UP,
                 'DOWN': pygame.K_DOWN,
                 'LEFT': pygame.K_LEFT,
@@ -63,22 +60,18 @@ class InputHandler:
             
         joystick = self.joysticks[player_id]
         
-        # Lecture des axes du joystick
         dx = joystick.get_axis(0)
         dy = joystick.get_axis(1)
         
-        # Application de la zone morte
         if abs(dx) < JOYSTICK_DEADZONE:
             dx = 0
         if abs(dy) < JOYSTICK_DEADZONE:
             dy = 0
             
-        # Lecture des boutons
         if RPI_AVAILABLE:
             fire = not GPIO.input(GPIO_BUTTONS[f'PLAYER{player_id+1}_FIRE'])
             shield = not GPIO.input(GPIO_BUTTONS[f'PLAYER{player_id+1}_SHIELD'])
         else:
-            # En mode développement, utiliser les boutons du joystick
             fire = joystick.get_button(BUTTON_FIRE)
             shield = joystick.get_button(BUTTON_SHIELD)
             
@@ -105,9 +98,8 @@ class InputHandler:
         if keys[controls['DOWN']]:
             dy = 1
             
-        # Normalisation du vecteur de déplacement pour le clavier
         if dx != 0 and dy != 0:
-            dx *= 0.707  # 1/√2
+            dx *= 0.707
             dy *= 0.707
             
         return {

@@ -6,14 +6,12 @@ class Database:
     def __init__(self):
         self.db_path = Path("game_data.db")
         self.connection = None
-        # On vérifie si la base de données existe déjà
         if not self.db_path.exists():
             self.init_database()
         
     def get_connection(self):
         if self.connection is None:
             self.connection = sqlite3.connect(self.db_path)
-            # Activer les foreign keys
             self.connection.execute("PRAGMA foreign_keys = ON")
         return self.connection
         
@@ -23,16 +21,12 @@ class Database:
             self.connection = None
         
     def reset_database(self):
-        """Supprime et réinitialise complètement la base de données."""
-        # Fermeture de la connexion existante
         self.close()
         
-        # Suppression de la base de données si elle existe
         if self.db_path.exists():
             try:
                 self.db_path.unlink()
             except PermissionError:
-                # Si on ne peut pas supprimer le fichier, on vide les tables
                 conn = self.get_connection()
                 cursor = conn.cursor()
                 cursor.execute("DELETE FROM matches")
@@ -41,14 +35,12 @@ class Database:
                 conn.commit()
                 return
         
-        # Réinitialisation de la base de données
         self.init_database()
         
     def init_database(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Table des joueurs
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS players (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +52,6 @@ class Database:
                 )
             ''')
             
-            # Table des parties
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS matches (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,7 +70,6 @@ class Database:
                 )
             ''')
             
-            # Table des paramètres
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS settings (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -99,7 +89,6 @@ class Database:
                 )
                 return cursor.lastrowid
         except sqlite3.IntegrityError:
-            # Le joueur existe déjà
             cursor.execute('SELECT id FROM players WHERE name = ?', (name,))
             return cursor.fetchone()[0]
             
@@ -125,7 +114,6 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Enregistrement de la partie
             cursor.execute('''
                 INSERT INTO matches (
                     player1_id, player2_id, player1_score, player2_score,
@@ -138,7 +126,6 @@ class Database:
                 match_data['player2_class'], match_data['duration']
             ))
             
-            # Mise à jour des statistiques des joueurs
             for player_id in [match_data['player1_id'], match_data['player2_id']]:
                 cursor.execute('''
                     UPDATE players 
@@ -202,8 +189,19 @@ class Database:
             return None 
 
     def get_all_players(self):
-        """Récupère la liste de tous les joueurs."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('SELECT id, name FROM players ORDER BY name')
             return cursor.fetchall() 
+
+    def reset_scores(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE players 
+                SET total_games = 0,
+                    total_wins = 0,
+                    best_score = 0
+            ''')
+            cursor.execute('DELETE FROM matches')
+            conn.commit() 
